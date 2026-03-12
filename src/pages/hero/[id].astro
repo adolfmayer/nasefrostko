@@ -18,7 +18,7 @@ const { hero } = Astro.props;
 ---
 
 <Layout title={`${hero.name} | Deník hrdiny`}>
-  <div class={`fixed inset-0 -z-10 bg-linear-to-br ${hero.color} to-zinc-950 opacity-40`}></div>
+  <div class={`fixed inset-0 -z-10 bg-linear-to-br ${hero.color} from-40% to-zinc-950 opacity-90`}></div>
 
   <div class="flex flex-col gap-8">
     
@@ -35,16 +35,16 @@ const { hero } = Astro.props;
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
       
       <aside class="lg:col-span-4 space-y-6">
-        <div class="glass-panel overflow-hidden p-0! border-neon-lime/20">
-          <img src={hero.image} alt={hero.name} class="w-full h-auto object-cover" />
+        <div class="glass-panel overflow-hidden p-0! border-neon-lime/20 justify-items-center">
+          <img src={hero.image} alt={hero.name} class="w-100 h-120 lg:h-auto object-cover object-top rounded-3xl" />
           <div class="p-6">
             <h1 class="font-medieval text-4xl text-white mb-2">{hero.name}</h1>
-            <p class="text-[oklch(0.7272_0.1_360)] font-brand text-sm tracking-tighter opacity-90">{hero.race}</p>
-            <p class="text-[oklch(0.7272_0.1_360)] font-brand text-sm tracking-tighter opacity-60">{hero.traits}</p>
+            <p class="text-zinc-500 font-brand text-sm tracking-tighter">{hero.race}</p>
+            <p class="text-zinc-500 font-brand text-sm tracking-tighter">{hero.traits}</p>
           </div>
         </div>
 
-        <div class="glass-panel border-white/5">
+        <div class="glass-panel border-white/5 justify-items-center">
             <h3 class="font-medieval text-xl mb-4">Úroveň hrdiny</h3>
             <div class="flex gap-2 flex-wrap">
                 {[1,2,3,4,5,6,7,8,9].map((lvl) => (
@@ -81,6 +81,11 @@ const { hero } = Astro.props;
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <StatCard label="Arrowvine" name="arrowvine" icon="https://raw.githubusercontent.com/any2cards/worldhaven/refs/heads/master/images/art/frosthaven/icons/loot/fh-arrowvine-bw-icon.png" />
                 <StatCard label="Axenut" name="axenut" icon="https://raw.githubusercontent.com/any2cards/worldhaven/refs/heads/master/images/art/frosthaven/icons/loot/fh-axenut-bw-icon.png" />
+                <StatCard label="Corpsecap" name="corpsecap" icon="https://raw.githubusercontent.com/any2cards/worldhaven/refs/heads/master/images/art/frosthaven/icons/loot/fh-corpsecap-bw-icon.png" />
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <StatCard label="Flamefruit" name="flamefruit" icon="https://raw.githubusercontent.com/any2cards/worldhaven/refs/heads/master/images/art/frosthaven/icons/loot/fh-flamefruit-bw-icon.png" />
+                <StatCard label="Rockroot" name="rockroot" icon="https://raw.githubusercontent.com/any2cards/worldhaven/refs/heads/master/images/art/frosthaven/icons/loot/fh-rockroot-bw-icon.png" />
                 <StatCard label="Snowthistle" name="snowthistle" icon="https://raw.githubusercontent.com/any2cards/worldhaven/refs/heads/master/images/art/frosthaven/icons/loot/fh-snowthistle-bw-icon.png" />
             </div>
         </div>

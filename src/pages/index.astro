@@ -13,14 +13,14 @@ interface Hero {
 
 <Layout title="Frosthaven | Výběr hrdiny">
   <div class="py-12">
-    <h1 class="font-medieval text-5xl text-center text-neon-lime mb-12 tracking-widest drop-shadow-[0_0_15px_rgba(200,255,0,0.3)]">
+    <h1 class="font-medieval text-5xl text-center text-white mb-12 tracking-widest drop-shadow-[0_0_15px_rgba(200,255,0,0.3)]">
       Zvol si svého hrdinu
     </h1>
     
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
       {heroes.map((hero: Hero) => (
         <a href={`/hero/${hero.id}`} class={`group relative overflow-hidden glass-panel border-2 border-white/5 transition-all duration-500 hover:scale-105 ${hero.borderColor}`}>
-          <div class={`absolute inset-0 bg-linear-to-t ${hero.color} to-transparent opacity-40 group-hover:opacity-60 transition-opacity`}></div>
+          <div class={`absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity`}></div>
           
           <img 
             src={hero.image} 
@@ -29,10 +29,10 @@ interface Hero {
           />
           
           <div class="absolute bottom-0 left-0 right-0 p-6 bg-linear-to-t from-black via-black/80 to-transparent">
-            <h2 class="font-medieval text-3xl text-white group-hover:text-neon-lime transition-colors">
+            <h2 class="font-medieval text-3xl text-white group-hover:text-[oklch(0.75_0_0)] transition-colors">
               {hero.name}
             </h2>
-            <p class="font-brand text-[10px] text-zinc-400 tracking-widest uppercase mt-2">Zobrazit deník</p>
+            <p class="font-brand text-sm text-zinc-400 tracking-widest uppercase mt-2">Zobrazit deník</p>
           </div>
         </a>
       ))}
