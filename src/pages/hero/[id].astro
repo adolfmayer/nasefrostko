@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { heroes } from '../../data/heroes.js';
-import { ChevronLeft, Zap, Coins, Package, Beaker } from 'lucide-astro';
+import { ChevronLeft, Link, Zap, Coins, Package, Beaker } from 'lucide-astro';
 import StatCard from '../../components/StatCard.astro';
 
 // 1. Tato funkce řekne Astru, jaké všechny stránky má vygenerovat
@@ -89,7 +89,52 @@ const { hero } = Astro.props;
                 <StatCard label="Snowthistle" name="snowthistle" icon="https://raw.githubusercontent.com/any2cards/worldhaven/refs/heads/master/images/art/frosthaven/icons/loot/fh-snowthistle-bw-icon.png" />
             </div>
         </div>
+<div class="glass-panel border-neon-lime/10">
+  <h3 class="font-medieval text-2xl mb-6 flex items-center gap-2">
+    <Zap class="text-neon-lime w-6 h-6" /> Perky a Schopnosti
+  </h3>
+  
+ <div class="space-y-4">
+  {hero.perks?.map((perk, perkIndex) => (
+    <div class="group p-3 rounded-lg bg-white/5 border border-white/5 hover:border-neon-lime/20 transition-all">
+      <div class="flex flex-col gap-3">
+        {/* Text perku */}
+        <span class="text-sm text-zinc-400 group-hover:text-white transition-colors leading-tight">
+          {perk.text}
+        </span>
 
+        {/* Kontejner pro checkboxy a ikonu */}
+        <div class="flex items-center gap-1.5"> 
+          {Array.from({ length: perk.slots }).map((_, slotIndex) => (
+            <>
+              {/* Ikona řetězu MEZI políčky (jen pro chained a ne před prvním slotem) */}
+              {perk.chained && slotIndex > 0 && (
+                <Link class="w-4 h-4 text-orange-400 flex-shrink-0 -mx-0.5" />
+              )}
+              
+              <div class="relative flex items-center justify-center">
+                <input 
+                  type="checkbox" 
+                  name={`perk-${perkIndex}-slot-${slotIndex}`}
+                  class={`
+                    peer appearance-none w-7 h-7 border-2 transition-all cursor-pointer
+                    border-zinc-600 rounded-md
+                    checked:bg-neon-lime checked:border-neon-lime
+                  `}
+                />
+                <svg class="absolute w-5 h-5 text-black font-bold hidden peer-checked:block pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+            </>
+          ))}
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+  
+</div>
       </section>
     </div>
   </div>
