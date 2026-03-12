@@ -1,0 +1,38 @@
+---
+// src/components/StatCard.astro
+const { icon, label, name } = Astro.props;
+---
+<div class="group relative flex flex-col items-center gap-3 p-4 glass-panel hover:border-neon-lime/40 transition-all duration-300">
+  <div class="relative">
+    <img 
+      src={icon} 
+      alt={label} 
+      class="w-10 h-10 invert opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300"
+    />
+    <div class="absolute inset-0 bg-neon-lime/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+  </div>
+
+  <span class="text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-500 group-hover:text-neon-lime transition-colors">
+    {label}
+  </span>
+
+  <input 
+    type="number" 
+    name={name}
+    id={name}
+    placeholder="0"
+    class="w-full bg-white/5 border border-white/10 rounded-lg py-2 text-center font-brand text-xl text-white outline-none focus:border-neon-lime/50 focus:ring-1 focus:ring-neon-lime/50 transition-all"
+  />
+</div>
+
+<style>
+  /* Odstranění šipek u inputu pro čísla, aby to vypadalo čistě */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type=number] {
+    -moz-appearance: textfield;
+  }
+</style>

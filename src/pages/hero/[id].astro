@@ -1,0 +1,91 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { heroes } from '../../data/heroes.js';
+import { ChevronLeft, Zap, Coins, Package, Beaker } from 'lucide-astro';
+import StatCard from '../../components/StatCard.astro';
+
+// 1. Tato funkce řekne Astru, jaké všechny stránky má vygenerovat
+export async function getStaticPaths() {
+  return heroes.map((hero) => ({
+    params: { id: hero.id },
+    props: { hero },
+  }));
+}
+
+// 2. Získání dat hrdiny z props
+const { id } = Astro.params;
+const { hero } = Astro.props;
+---
+
+<Layout title={`${hero.name} | Deník hrdiny`}>
+  <div class={`fixed inset-0 -z-10 bg-linear-to-br ${hero.color} to-zinc-950 opacity-40`}></div>
+
+  <div class="flex flex-col gap-8">
+    
+    <nav class="flex justify-between items-center">
+      <a href="/" class="flex items-center gap-2 text-zinc-400 hover:text-neon-lime transition-colors group">
+        <ChevronLeft class="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+        Zpět na výběr
+      </a>
+      <div class="font-brand text-xs tracking-widest text-zinc-500 uppercase">
+        Deník hrdiny / {id}
+      </div>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <aside class="lg:col-span-4 space-y-6">
+        <div class="glass-panel overflow-hidden p-0! border-neon-lime/20">
+          <img src={hero.image} alt={hero.name} class="w-full h-auto object-cover" />
+          <div class="p-6">
+            <h1 class="font-medieval text-4xl text-white mb-2">{hero.name}</h1>
+            <p class="text-[oklch(0.7272_0.1_360)] font-brand text-sm tracking-tighter opacity-90">{hero.race}</p>
+            <p class="text-[oklch(0.7272_0.1_360)] font-brand text-sm tracking-tighter opacity-60">{hero.traits}</p>
+          </div>
+        </div>
+
+        <div class="glass-panel border-white/5">
+            <h3 class="font-medieval text-xl mb-4">Úroveň hrdiny</h3>
+            <div class="flex gap-2 flex-wrap">
+                {[1,2,3,4,5,6,7,8,9].map((lvl) => (
+                    <button class="w-10 h-10 rounded border border-white/10 flex items-center justify-center font-brand hover:bg-neon-lime hover:text-black transition-colors">
+                        {lvl}
+                    </button>
+                ))}
+            </div>
+        </div>
+      </aside>
+
+      <section class="lg:col-span-8 space-y-6">
+        
+        <div class="grid grid-cols-2 md:grid-cols-2 gap-4">
+            <StatCard label="Zkušenosti (XP)" name="xp" icon="https://raw.githubusercontent.com/any2cards/worldhaven/refs/heads/master/images/art/frosthaven/icons/general/fh-xp-bw-icon.png" />
+            <StatCard label="Zlaťáky (Gold)" name="gold" icon="https://raw.githubusercontent.com/any2cards/worldhaven/refs/heads/master/images/art/frosthaven/icons/general/fh-money-bw-icon.png" />
+        </div>
+
+        <div class="glass-panel">
+            <h3 class="font-medieval text-2xl mb-6 flex items-center gap-2">
+                <Package class="text-[oklch(0.6173_0.1628_21.16)] w-6 h-6" /> Suroviny
+            </h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <StatCard label="Dřevo" name="wood" icon="https://raw.githubusercontent.com/any2cards/worldhaven/refs/heads/master/images/art/frosthaven/icons/loot/fh-lumber-bw-icon.png" />
+                <StatCard label="Kov" name="metal" icon="https://raw.githubusercontent.com/any2cards/worldhaven/refs/heads/master/images/art/frosthaven/icons/loot/fh-metal-bw-icon.png" />
+                <StatCard label="Kůže" name="hide" icon="https://raw.githubusercontent.com/any2cards/worldhaven/refs/heads/master/images/art/frosthaven/icons/loot/fh-hide-bw-icon.png" />
+            </div>
+        </div>
+
+        <div class="glass-panel border-green-500/10">
+            <h3 class="font-medieval text-2xl mb-6 flex items-center gap-2">
+                <Beaker class="text-[oklch(0.617_0.5702_145.99)] w-6 h-6" /> Bylinky
+            </h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <StatCard label="Arrowvine" name="arrowvine" icon="https://raw.githubusercontent.com/any2cards/worldhaven/refs/heads/master/images/art/frosthaven/icons/loot/fh-arrowvine-bw-icon.png" />
+                <StatCard label="Axenut" name="axenut" icon="https://raw.githubusercontent.com/any2cards/worldhaven/refs/heads/master/images/art/frosthaven/icons/loot/fh-axenut-bw-icon.png" />
+                <StatCard label="Snowthistle" name="snowthistle" icon="https://raw.githubusercontent.com/any2cards/worldhaven/refs/heads/master/images/art/frosthaven/icons/loot/fh-snowthistle-bw-icon.png" />
+            </div>
+        </div>
+
+      </section>
+    </div>
+  </div>
+</Layout>
