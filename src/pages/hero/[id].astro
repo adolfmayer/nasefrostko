@@ -44,16 +44,48 @@ const { hero } = Astro.props;
           </div>
         </div>
 
-        <div class="glass-panel border-white/5 justify-items-center">
-            <h3 class="font-medieval text-xl mb-4">Úroveň hrdiny</h3>
-            <div class="flex gap-2 flex-wrap">
-                {[1,2,3,4,5,6,7,8,9].map((lvl) => (
-                    <button class="w-10 h-10 rounded border border-white/10 flex items-center justify-center font-brand hover:bg-neon-lime hover:text-black transition-colors">
-                        {lvl}
-                    </button>
-                ))}
-            </div>
+ <div class="flex flex-col items-center justify-center w-full my-12">
+  <h3 class="font-medieval text-2xl mb-8 text-white text-center tracking-wide">Úroveň hrdiny</h3>
+  
+  <div class="flex flex-wrap justify-center items-end gap-x-5 gap-y-8 max-w-3xl mx-auto">
+    {[
+      { lvl: 1, xp: 0 },
+      { lvl: 2, xp: 45 },
+      { lvl: 3, xp: 95 },
+      { lvl: 4, xp: 150 },
+      { lvl: 5, xp: 210 },
+      { lvl: 6, xp: 275 },
+      { lvl: 7, xp: 345 },
+      { lvl: 8, xp: 420 },
+      { lvl: 9, xp: 500 },
+    ].map((item) => (
+      <label class="flex flex-col items-center gap-3 group cursor-pointer">
+       
+        
+        <div class="relative w-10 h-10">
+          <input 
+            type="checkbox" 
+            name={`level-${item.lvl}`}
+            data-level={item.lvl}
+            class="level-checkbox peer appearance-none w-full h-full border-2 border-white/10 rounded-full checked:bg-neon-lime checked:border-neon-lime transition-all hover:border-neon-lime/40"
+          />
+          {/* Absolutně vycentrované číslo uvnitř */}
+          <span class="absolute inset-0 flex items-center justify-center text-zinc-400 font-bold text-md peer-checked:text-black transition-colors pointer-events-none">
+            {item.lvl}
+          </span>
         </div>
+
+        {/* XP hodnota pod kroužkem */}
+        <div class="flex flex-col items-center">
+          <span class="text-md font-mono text-zinc-500 peer-checked:text-neon-lime font-bold">
+            {item.xp}
+          </span>
+          <span class="text-sm text-zinc-600 uppercase tracking-tighter">XP</span>
+        </div>
+      </label>
+    ))}
+  </div>
+</div>
       </aside>
 
       <section class="lg:col-span-8 space-y-6">
@@ -109,7 +141,7 @@ const { hero } = Astro.props;
             <>
               {/* Ikona řetězu MEZI políčky (jen pro chained a ne před prvním slotem) */}
               {perk.chained && slotIndex > 0 && (
-                <Link class="w-4 h-4 text-orange-400 flex-shrink-0 -mx-0.5" />
+                <Link class="w-4 h-4 text-orange-400 shrink-0 -mx-0.5" />
               )}
               
               <div class="relative flex items-center justify-center">
@@ -139,3 +171,83 @@ const { hero } = Astro.props;
     </div>
   </div>
 </Layout>
+
+<script>
+  // Hlavní funkce pro uložení dat
+  function saveHeroData() {
+    const heroId = window.location.pathname.split('/').filter(Boolean).pop();
+    const inputs = document.querySelectorAll('input');
+    
+    inputs.forEach(input => {
+      const target = input as HTMLInputElement;
+      const name = target.getAttribute('name');
+      if (name) {
+        const value = target.type === 'checkbox' ? target.checked.toString() : target.value;
+        localStorage.setItem(`${heroId}-${name}`, value);
+      }
+    });
+  }
+
+  // Funkce, která se stará o řetězení levelů
+  function handleLevelChaining(clickedLevel: number, isChecked: boolean) {
+    // Najdeme všechny level-checkboxy na stránce
+    const levelCheckboxes = document.querySelectorAll('.level-checkbox') as NodeListOf<HTMLInputElement>;
+    
+    levelCheckboxes.forEach(cb => {
+      const currentLvl = parseInt(cb.getAttribute('data-level') || "0");
+      
+      if (isChecked) {
+        // Pokud zaškrtávám vysoký level, zaškrtni i všechno pod ním
+        if (currentLvl <= clickedLevel) {
+          cb.checked = true;
+        }
+      } else {
+        // Pokud odškrtávám nízký level, musí zmizet i všechno nad ním
+        if (currentLvl >= clickedLevel) {
+          cb.checked = false;
+        }
+      }
+    });
+    
+    // Po změně všech checkboxů hned uložíme nový stav
+    saveHeroData();
+  }
+
+  // Načtení dat při startu (aby se deník neztratil po F5)
+  function loadHeroData() {
+    const heroId = window.location.pathname.split('/').filter(Boolean).pop();
+    const inputs = document.querySelectorAll('input');
+
+    inputs.forEach(input => {
+      const target = input as HTMLInputElement;
+      const name = target.getAttribute('name');
+      if (name) {
+        const savedValue = localStorage.getItem(`${heroId}-${name}`);
+        if (savedValue !== null) {
+          if (target.type === 'checkbox') {
+            target.checked = savedValue === 'true';
+          } else {
+            target.value = savedValue;
+          }
+        }
+      }
+    });
+  }
+
+  // Inicializace
+  loadHeroData();
+
+  // Posluchač na všechny změny
+  document.addEventListener('input', (e) => {
+    const target = e.target as HTMLInputElement;
+    
+    // Pokud klikneme na level, spustíme řetězení
+    if (target.classList.contains('level-checkbox')) {
+      const clickedLvl = parseInt(target.getAttribute('data-level') || "0");
+      handleLevelChaining(clickedLvl, target.checked);
+    } else {
+      // Pro všechno ostatní (zlato, XP, suroviny) jen uložíme
+      saveHeroData();
+    }
+  });
+</script>
