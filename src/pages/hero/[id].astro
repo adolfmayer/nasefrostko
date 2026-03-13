@@ -175,116 +175,133 @@ const { hero } = Astro.props;
 <script>
   import { supabase } from '../../supabase.js';
 
-// Definujeme saveTimeout s typem, aby TypeScript neprskal
-let saveTimeout: ReturnType<typeof setTimeout>;
+  // --- GLOBÁLNÍ PROMĚNNÉ A TYPY ---
+  let saveTimeout: ReturnType<typeof setTimeout>;
 
-async function saveHeroData() {
-  const heroId = window.location.pathname.split('/').filter(Boolean).pop();
-  const inputs = document.querySelectorAll('input');
-  
-  // Tady říkáme TypeScriptu: "allData je objekt, kde klíč je string a hodnota může být cokoli"
-  const allData: Record<string, any> = {};
-  
-  inputs.forEach(input => {
-    const target = input as HTMLInputElement;
-    const name = target.getAttribute('name');
-    if (name) {
-      const value = target.type === 'checkbox' ? target.checked : target.value;
-      allData[name] = value;
-      localStorage.setItem(`${heroId}-${name}`, value.toString());
-    }
-  });
-
-  // Výpočty pro hlavní sloupce
-  // Používáme "as string", aby TS věděl, že z toho pole pole pole leze řetězec
-  const goldValue = parseInt((allData['gold'] as string) || "0");
-  const xpValue = parseInt((allData['xp'] as string) || "0");
-  
-  let currentLevel = 1;
-  for (let i = 1; i <= 9; i++) {
-    if (allData[`level-${i}`] === true) {
-      currentLevel = i;
-    }
-  }
-
-  clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(async () => {
-    console.log('Synchronizuji s cloudem...');
-
-    const { error } = await supabase
-      .from('hero_stats')
-      .upsert({ 
-        hero_id: heroId, 
-        gold: goldValue,
-        xp: xpValue,
-        level: currentLevel,
-        all_data: allData 
-      }, { onConflict: 'hero_id' });
-
-    if (error) console.error('Chyba cloudu:', error.message);
-    else console.log('Cloud Sync OK!');
-  }, 1000); 
-}
-
-  // Funkce, která se stará o řetězení levelů
-  function handleLevelChaining(clickedLevel: number, isChecked: boolean) {
-    // Najdeme všechny level-checkboxy na stránce
-    const levelCheckboxes = document.querySelectorAll('.level-checkbox') as NodeListOf<HTMLInputElement>;
-    
-    levelCheckboxes.forEach(cb => {
-      const currentLvl = parseInt(cb.getAttribute('data-level') || "0");
-      
-      if (isChecked) {
-        // Pokud zaškrtávám vysoký level, zaškrtni i všechno pod ním
-        if (currentLvl <= clickedLevel) {
-          cb.checked = true;
-        }
-      } else {
-        // Pokud odškrtávám nízký level, musí zmizet i všechno nad ním
-        if (currentLvl >= clickedLevel) {
-          cb.checked = false;
-        }
-      }
-    });
-    
-    // Po změně všech checkboxů hned uložíme nový stav
-    saveHeroData();
-  }
-
-  // Načtení dat při startu (aby se deník neztratil po F5)
-  function loadHeroData() {
+  // --- 1. NAČÍTÁNÍ DAT (Cloud jako priorita, Local jako fallback) ---
+  async function loadHeroData() {
     const heroId = window.location.pathname.split('/').filter(Boolean).pop();
     const inputs = document.querySelectorAll('input');
+
+    console.log('Načítám data z cloudu...');
+    
+    // Zkusíme vytáhnout all_data ze Supabase
+    const { data, error } = await supabase
+      .from('hero_stats')
+      .select('all_data')
+      .eq('hero_id', heroId)
+      .single();
+
+    if (error) {
+      console.warn('Data v cloudu nenalezena nebo chyba, použiji localStorage:', error.message);
+    }
 
     inputs.forEach(input => {
       const target = input as HTMLInputElement;
       const name = target.getAttribute('name');
+      
       if (name) {
-        const savedValue = localStorage.getItem(`${heroId}-${name}`);
-        if (savedValue !== null) {
+        let valueToLoad: any = null;
+
+        // A. Priorita: Data ze Supabase
+        if (data && data.all_data && data.all_data[name] !== undefined) {
+          valueToLoad = data.all_data[name];
+        } 
+        // B. Fallback: Data z LocalStorage
+        else {
+          const localValue = localStorage.getItem(`${heroId}-${name}`);
+          if (localValue !== null) {
+            valueToLoad = target.type === 'checkbox' ? (localValue === 'true') : localValue;
+          }
+        }
+
+        // Aplikace hodnoty do inputu
+        if (valueToLoad !== null) {
           if (target.type === 'checkbox') {
-            target.checked = savedValue === 'true';
+            target.checked = valueToLoad === true;
           } else {
-            target.value = savedValue;
+            target.value = valueToLoad;
           }
         }
       }
     });
+    console.log('Načítání dokončeno.');
   }
 
-  // Inicializace
+  // --- 2. UKLÁDACÍ LOGIKA (Místní i Cloud) ---
+  async function saveHeroData() {
+    const heroId = window.location.pathname.split('/').filter(Boolean).pop();
+    const inputs = document.querySelectorAll('input');
+    const allData: Record<string, any> = {};
+    
+    // Posbíráme data ze všech políček
+    inputs.forEach(input => {
+      const target = input as HTMLInputElement;
+      const name = target.getAttribute('name');
+      if (name) {
+        const value = target.type === 'checkbox' ? target.checked : target.value;
+        allData[name] = value;
+        // Okamžitá lokální záloha
+        localStorage.setItem(`${heroId}-${name}`, value.toString());
+      }
+    });
+
+    // Výpočty pro hlavní sloupce v DB
+    const goldValue = parseInt((allData['gold'] as string) || "0");
+    const xpValue = parseInt((allData['xp'] as string) || "0");
+    let currentLevel = 1;
+    for (let i = 1; i <= 9; i++) {
+      if (allData[`level-${i}`] === true) currentLevel = i;
+    }
+
+    // CLOUD SYNC s vteřinovým zpožděním (Debounce)
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(async () => {
+      console.log('Synchronizuji s cloudem Supabase...');
+
+      const { error } = await supabase
+        .from('hero_stats')
+        .upsert({ 
+          hero_id: heroId, 
+          gold: goldValue,
+          xp: xpValue,
+          level: currentLevel,
+          all_data: allData 
+        }, { onConflict: 'hero_id' });
+
+      if (error) console.error('Chyba synchronizace:', error.message);
+      else console.log('Cloud Sync OK! (Level:', currentLevel, ')');
+    }, 1000); 
+  }
+
+  // --- 3. ŘETĚZENÍ LEVELŮ ---
+  function handleLevelChaining(clickedLevel: number, isChecked: boolean) {
+    const levelCheckboxes = document.querySelectorAll('.level-checkbox') as NodeListOf<HTMLInputElement>;
+    
+    levelCheckboxes.forEach(cb => {
+      const currentLvl = parseInt(cb.getAttribute('data-level') || "0");
+      if (isChecked) {
+        if (currentLvl <= clickedLevel) cb.checked = true;
+      } else {
+        if (currentLvl >= clickedLevel) cb.checked = false;
+      }
+    });
+    
+    saveHeroData();
+  }
+
+  // --- 4. INICIALIZACE A LISTENERY ---
+  
+  // Spustíme načítání hned při startu
   loadHeroData();
 
-  // Posluchač na všechny změny
   document.addEventListener('input', (e) => {
     const target = e.target as HTMLInputElement;
     
-    // Pokud klikneme na level, spustíme řetězení
     if (target.classList.contains('level-checkbox')) {
       const clickedLvl = parseInt(target.getAttribute('data-level') || "0");
       handleLevelChaining(clickedLvl, target.checked);
     } else {
-      // Pro všechno ostatní (zlato, XP, suroviny) jen uložíme
       saveHeroData();
     }
   });
