@@ -64,34 +64,60 @@ interface Hero {
 </Layout>
 
 <script>
-  function updateDashboard() {
-    // Najdeme všechny karty hrdinů na stránce
+  import { supabase } from '../supabase.js';
+
+  async function updateDashboard() {
+    // 1. Nejdřív zkusíme načíst VŠECHNA data hrdinů najednou ze Supabase
+    console.log('Načítám přehled hrdinů z cloudu...');
+    const { data: cloudData, error } = await supabase
+      .from('hero_stats')
+      .select('hero_id, level, gold');
+
+    if (error) {
+      console.error('Chyba při načítání cloudu:', error.message);
+    }
+
+    // 2. Najdeme všechny karty hrdinů na stránce
     const cards = document.querySelectorAll('.hero-card');
 
     cards.forEach(card => {
       const id = card.getAttribute('data-id');
       if (!id) return;
 
-      // 1. Načtení Levelu (najdeme nejvyšší zaškrtnutý)
       let currentLvl = 1;
-      for (let i = 1; i <= 9; i++) {
-        if (localStorage.getItem(`${id}-level-${i}`) === 'true') {
-          currentLvl = i;
+      let currentGold = 0;
+
+      // A. Priorita: Podíváme se, jestli máme data z cloudu pro tohoto hrdinu
+      const heroStats = cloudData?.find(h => h.hero_id === id);
+      
+      if (heroStats) {
+        currentLvl = heroStats.level;
+        currentGold = heroStats.gold;
+      } 
+      // B. Fallback: Pokud cloud nic nevrátil, zkusíme localStorage (pro jistotu)
+      else {
+        // Načtení Levelu z localu
+        for (let i = 1; i <= 9; i++) {
+          if (localStorage.getItem(`${id}-level-${i}`) === 'true') {
+            currentLvl = i;
+          }
         }
+        // Načtení Goldů z localu
+        currentGold = parseInt(localStorage.getItem(`${id}-gold`) || '0');
       }
+
+      // 3. Vepíšeme data do HTML prvků karty
       const lvlEl = document.getElementById(`lvl-${id}`);
       if (lvlEl) lvlEl.textContent = currentLvl.toString();
 
-      // 2. Načtení Zlaťáků
-      const gold = localStorage.getItem(`${id}-gold`) || '0';
       const goldEl = document.getElementById(`gold-${id}`);
-      if (goldEl) goldEl.textContent = gold;
+      if (goldEl) goldEl.textContent = currentGold.toString();
     });
   }
 
   // Spustit při načtení
   updateDashboard();
   
-  // Astro trik: Spustit i při navigaci zpět (Astro používá View Transitions)
+  // Pro Astro View Transitions
   document.addEventListener('astro:after-swap', updateDashboard);
 </script>
