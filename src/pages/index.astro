@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { heroes } from '../data/heroes.js';
+import { Crown, Coins } from 'lucide-astro';
 
 interface Hero {
   id: string;
@@ -11,31 +12,86 @@ interface Hero {
 }
 ---
 
-<Layout title="Frosthaven | Výběr hrdiny">
-  <div class="py-12">
-    <h1 class="font-medieval text-5xl text-center text-white mb-12 tracking-widest drop-shadow-[0_0_15px_rgba(200,255,0,0.3)]">
-      Zvol si svého hrdinu
+<Layout title="Frosthaven Deník">
+  <main class="max-w-6xl mx-auto py-12 px-4">
+    <h1 class="font-medieval text-5xl text-white text-center mb-12 tracking-wider">
+      Tvoje Parta
     </h1>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-      {heroes.map((hero: Hero) => (
-        <a href={`/hero/${hero.id}`} class={`group relative overflow-hidden glass-panel border-2 border-white/5 transition-all duration-500 hover:scale-105 ${hero.borderColor}`}>
-          <div class={`absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity`}></div>
-          
-          <img 
-            src={hero.image} 
-            alt={hero.name} 
-            class="w-full h-100 object-cover object-top opacity-80 group-hover:opacity-100 transition-all duration-700"
-          />
-          
-          <div class="absolute bottom-0 left-0 right-0 p-6 bg-linear-to-t from-black via-black/80 to-transparent">
-            <h2 class="font-medieval text-3xl text-white group-hover:text-[oklch(0.75_0_0)] transition-colors">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {heroes.map((hero) => (
+        <a 
+          href={`/hero/${hero.id}`}
+          class="hero-card group relative bg-zinc-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-neon-lime/30 transition-all duration-500"
+          data-id={hero.id}
+        >
+          {/* Obrázek s overlayem */}
+          <div class="aspect-4/5 overflow-hidden">
+            <img 
+              src={hero.image} 
+              alt={hero.name} 
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            />
+            <div class="absolute inset-0 bg-linear-to-t from-black via-black/20 to-transparent"></div>
+          </div>
+
+          {/* Obsah karty */}
+          <div class="absolute bottom-0 left-1/2 -translate-x-1/2 p-6">
+            <h2 class="font-medieval text-3xl text-white mb-1 group-hover:text-[oklch(0.75_0_0)] transition-colors">
               {hero.name}
             </h2>
-            <p class="font-brand text-sm text-zinc-400 tracking-widest uppercase mt-2">Zobrazit deník</p>
+            <p class="text-zinc-400 text-xs uppercase tracking-widest mb-4">{hero.race}</p>
+
+            {/* LIVE STATS BAR */}
+            <div class="flex items-center gap-4 py-3 px-4 bg-black/40 backdrop-blur-md rounded-2xl border border-white/5">
+              <div class="flex items-center gap-1.5">
+                <Crown class="w-4 h-4 text-yellow-500" />
+                <span class="text-sm font-bold text-white" id={`lvl-${hero.id}`}>1</span>
+              </div>
+              
+              <div class="w-px h-4 bg-white/10"></div>
+
+              <div class="flex items-center gap-1.5">
+                <Coins class="w-4 h-4 text-amber-400" />
+                <span class="text-sm font-bold text-white" id={`gold-${hero.id}`}>0</span>
+              </div>
+            </div>
           </div>
         </a>
       ))}
     </div>
-  </div>
+  </main>
 </Layout>
+
+<script>
+  function updateDashboard() {
+    // Najdeme všechny karty hrdinů na stránce
+    const cards = document.querySelectorAll('.hero-card');
+
+    cards.forEach(card => {
+      const id = card.getAttribute('data-id');
+      if (!id) return;
+
+      // 1. Načtení Levelu (najdeme nejvyšší zaškrtnutý)
+      let currentLvl = 1;
+      for (let i = 1; i <= 9; i++) {
+        if (localStorage.getItem(`${id}-level-${i}`) === 'true') {
+          currentLvl = i;
+        }
+      }
+      const lvlEl = document.getElementById(`lvl-${id}`);
+      if (lvlEl) lvlEl.textContent = currentLvl.toString();
+
+      // 2. Načtení Zlaťáků
+      const gold = localStorage.getItem(`${id}-gold`) || '0';
+      const goldEl = document.getElementById(`gold-${id}`);
+      if (goldEl) goldEl.textContent = gold;
+    });
+  }
+
+  // Spustit při načtení
+  updateDashboard();
+  
+  // Astro trik: Spustit i při navigaci zpět (Astro používá View Transitions)
+  document.addEventListener('astro:after-swap', updateDashboard);
+</script>
