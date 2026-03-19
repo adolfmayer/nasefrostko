@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('zmena zlata se projevi v cloudu', async ({ page }) => {
   //  Otevři tvou live stránku (nebo local)
-  await page.goto('http://localhost:4321/hero/slim-shady'); // Uprav podle svého ID
+  await page.goto('/hero/slim-shady'); // Uprav podle svého ID
 
   const goldInput = page.locator('input[name="gold"]');
 
